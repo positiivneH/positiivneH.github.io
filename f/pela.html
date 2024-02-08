@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="et">
+ 
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<div class="john">
+    <h1>Sõnaseletusmäng</h1>
+    <h2>Pane sõnad definitsioonidega kokku!</h2>
+</div>
+ 
+<style>
+    .john {
+        text-align: center;
+    }
+    html, body {
+    height: 100%;
+    max-height: 100vh; /* Piirab kõrguse ekraani kõrgusega */
+    overflow: hidden; /* Keelab kerimise */
+}
+    .container {
+ 
+        display: flex;
+ 
+        justify-content: space-between;
+ 
+        padding: 100px;
+ 
+    }
+ 
+    .words,
+    .definitions {
+ 
+        width: 45%;
+
+        text-align: left;
+    }
+ 
+    .item,
+    .definition {
+ 
+        border: 1px solid black;
+ 
+        margin: 5px;
+ 
+        padding: 10px;
+ 
+        cursor: pointer;
+ 
+    }
+ 
+    .item {
+ 
+        background-color: #F8FB77;
+        height: 30px;
+        text-align: center;
+        width: 300px;
+    }
+ 
+    .definition {
+ 
+        background-color: #CC75BE;
+ 
+        height: 50px;
+ 
+        display: flex;
+ 
+        align-items: right;
+ 
+        justify-content: center;
+ 
+    }
+ 
+    #scoreboard {
+    margin: 20px 0;
+    font-size: 50px;
+    color: rgb(0, 0, 0);
+    order: -1;
+    }
+ 
+    .game-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Full viewport height */
+    flex-direction: column;
+    }
+</style>
+ 
+<body>
+    <div class="game-wrapper">
+        <div id="scoreboard">Skoor: 0%</div>
+        <div class="container">
+            <div class="words">
+            <!-- ... -->
+            </div>
+            <div class="definitions">
+            <!-- ... -->
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+ 
+</html>
+<script>
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        const words = [
+            { id: "Märgistik", text: "Märgistik" },
+            { id: "Reasisene element", text: "Reasisene element" },
+            { id: "Blokielement", text: "Blokielement" },
+            { id: "Täidiseala", text: "Täidiseala" },
+            { id: "Välimine vahe", text: "Välimine vahe" },
+            { id: "Lühendvorm", text: "Lühendvorm" },
+            { id: "Traadiraamistik", text: "Traadiraamistik" },
+            { id: "Meediapäring", text: "Meediapäring" },
+            { id: "Hõljumine", text: "Hõljumine" },
+            { id: "Piirikast", text: "Piirikast" },
+        ];
+ 
+        const definitions = [
+            { id: "Märgistik", definition: "Määrab dokumendi märgistiku ehk tekstikoodi." },
+            { id: "Reasisene element", definition: "HTML elemendid, mis ei alusta uut rida ning võimaldab muud elementi mahutada enda kõrvale." },
+            { id: "Blokielement", definition: "HTML elemendid, mis alustavad alati uut rida ja hõivavad kogu laiuse nagu näiteks <div>." },
+            { id: "Täidiseala", definition: "CSS omadus, mis määrab elemendi sisemise täidise ala elemendi sisemise piiri ja sisu vahel." },
+            { id: "Välimine vahe", definition: "CSS omadus, mis määrab elemendi välimise vahe ümbritsevate elementidega." },
+            { id: "Lühendvorm", definition: "Lühendatud viis omaduste määratlemiseks, näiteks CSS omaduste lühendtähised." },
+            { id: "Traadiraamistik", definition: "Skeem või joonis, mis kujutab endast veebilehe või rakenduse struktuuri ja paigutust ilma detailsete kujunduseta." },
+            { id: "Meediapäring", definition: "CSS tehnika, mis võimaldab stiilide muutmist vastavalt seadme omadustele, nagu ekraani laius või seadme tüüp." },
+            { id: "Hõljumine", definition: "CSS olek, mis aktiveerub siis, kui kasutaja hiirega elemendi kohal 'hõljub' või viipab." },
+            { id: "Piirikast", definition: "CSS mudel, mis arvestab elemendi piirid koos polstrite ja täidisega, mitte ainult sisu." },
+        ];
+ 
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        shuffle(words);
+        shuffle(definitions);
+        
+        const wordsContainer = document.querySelector('.words');
+    const definitionsContainer = document.querySelector('.definitions');
+    let correctAnswers = 0;
+ 
+    words.forEach(word => {
+        let div = document.createElement('div');
+        div.innerText = word.text;
+        div.setAttribute('draggable', true);
+        div.setAttribute('id', word.id);
+        div.classList.add('item');
+        wordsContainer.appendChild(div);
+    });
+ 
+    definitions.forEach(definition => {
+        let div = document.createElement('div');
+        div.innerText = definition.definition;
+        div.setAttribute('id', definition.id + "-def");
+        div.classList.add('definition');
+        definitionsContainer.appendChild(div);
+    });
+ 
+        let draggedItem = null;
+
+        document.querySelectorAll('.item').forEach(item => {
+            item.addEventListener('dragstart', () => {
+                draggedItem = item;
+                setTimeout(() => {
+                    item.style.display = "none";
+                }, 0);
+            });
+
+            item.addEventListener('dragend', () => {
+                setTimeout(() => {
+                    draggedItem.style.display = "block";
+                    draggedItem = null;
+                }, 0);
+            });
+        });
+   
+        let totalScore = 0;
+        let matchedWords = 0;
+
+        document.querySelectorAll('.definition').forEach(def => {
+            def.addEventListener('dragover', e => e.preventDefault());
+
+            def.addEventListener('drop', function () {
+                if (this.id === draggedItem.id + "-def") {
+                    this.append(draggedItem);
+                    this.style.backgroundColor = "lightgreen";
+                    document.body.style.backgroundImage = "url('image4.png')"; // Õige vastuse pilt
+                    totalScore += 10;
+                    matchedWords++;
+                } else {
+                    this.style.backgroundColor = "lightcoral";
+                    document.body.style.backgroundImage = "url('image5.png')"; // Vale vastuse pilt
+                    totalScore -= 5;
+                    setTimeout(() => {
+                        this.style.backgroundColor = "#CC75BE";
+                    }, 1000);
+                }
+                updateScore();
+                if (matchedWords === words.length) {
+                    checkEndings();
+                }
+            });
+        });
+
+ 
+        function updateScore() {
+            const scorePercentage = Math.round((totalScore / (words.length * 10)) * 100);
+            document.getElementById('scoreboard').textContent = `Skoor: ${scorePercentage}%`;
+        }
+
+        function checkEndings() {
+            if (totalScore < 60) {
+                handleBadEnding();
+            } else {
+                handleGoodEnding();
+            }
+        }
+
+        function handleBadEnding() {
+            alert("VALE VALE VALE!!!");
+            document.body.style.backgroundImage = "url('tavandiruum.png')"; // Vale lõpu pilt
+        }
+
+        function handleGoodEnding() {
+            alert("TÕDE TÕDE TÕDE!!!");
+            document.body.style.backgroundImage = "url('image4.png')"; // Õige lõpu pilt
+        }
+    });
+</script>
